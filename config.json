@@ -1,0 +1,8 @@
+{
+	"ListenAddress": "0.0.0.0",
+	"ListenPort": 443,
+	"Rules": [
+		{"a.b.com}":"baidu.com:443"},
+		{".*":"sina.com:443"}
+	]
+}
