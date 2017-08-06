@@ -28,7 +28,6 @@ func init() {
 type TLSClient struct {
 	ListenAddress  string
 	BackendAddress string
-	Domain         string
 }
 
 func (s *TLSClient) Init() *TLSClient {
@@ -40,7 +39,7 @@ func (s *TLSClient) Init() *TLSClient {
 	s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	s.ListenAddress = SS_LOCAL_HOST + ":" + SS_LOCAL_PORT
 	s.LoadOption(SS_PLUGIN_OPTIONS)
-	s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
+	//s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	return s
 }
 
@@ -55,7 +54,7 @@ func (s *TLSClient) LoadOption(option string) {
 		value := d[1]
 		switch key {
 		case "domain":
-			s.Domain = value
+			s.BackendAddress = value
 		}
 	}
 }
