@@ -22,7 +22,7 @@ func init() {
 	)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 	backendLeveled := logging.AddModuleLevel(backendFormatter)
-	backendLeveled.SetLevel(logging.WARNING, "")
+	backendLeveled.SetLevel(logging.DEBUG, "")
 	logging.SetBackend(backendLeveled)
 	Log = log
 }

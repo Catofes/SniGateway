@@ -100,8 +100,10 @@ func (s *AndroidTLSClient) handleConn(conn net.Conn) {
 
 func main() {
 	if VPN_mode {
+		log.Debugf("VPN mode set.")
 		path := "protect_path"
 		callback := func(fd int) {
+			log.Debugf("Protect socket. %s", fd)
 			socket, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 			if err != nil {
 				log.Warning(err.Error())
@@ -132,5 +134,6 @@ func main() {
 		}
 		net.Callback = callback
 	}
+	log.Debugf("Net mode set.")
 	(&AndroidTLSClient{}).Init().Listen()
 }
