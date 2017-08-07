@@ -55,7 +55,6 @@ set_timeout(int sock)
 import "C"
 
 import (
-	"flag"
 	"github.com/Catofes/SniGateway/client"
 	"crypto/tls"
 	"github.com/op/go-logging"
@@ -67,7 +66,6 @@ var VPN_mode bool = false
 var log *logging.Logger
 
 func init() {
-	VPN_mode = *flag.Bool("V", false, "Set VPN mode.")
 	log = TLSClient.Log
 }
 
@@ -99,7 +97,8 @@ func (s *AndroidTLSClient) handleConn(conn net.Conn) {
 }
 
 func main() {
-	if VPN_mode {
+	client := (&AndroidTLSClient{}).Init()
+	if client.VPN_Mode {
 		log.Debugf("VPN mode set.")
 		path := "protect_path"
 		callback := func(fd int) {
@@ -135,5 +134,5 @@ func main() {
 		net.Callback = callback
 	}
 	log.Debugf("Net mode set.")
-	(&AndroidTLSClient{}).Init().Listen()
+	client.Listen()
 }

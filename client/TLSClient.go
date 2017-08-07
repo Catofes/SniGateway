@@ -31,6 +31,7 @@ type TLSClient struct {
 	ListenAddress  string
 	BackendAddress string
 	Domain         string
+	VPN_Mode       bool
 }
 
 func (s *TLSClient) Init() *TLSClient {
@@ -45,9 +46,23 @@ func (s *TLSClient) Init() *TLSClient {
 	if ok, _ := regexp.MatchString(ip_reg, SS_REMOTE_PORT); !ok {
 		s.Domain = SS_REMOTE_HOST
 	}
+	s.VPN_Mode = true
 	s.LoadOption(SS_PLUGIN_OPTIONS)
 	//s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	return s
+}
+
+func String2Bool(input string) bool {
+	switch input {
+	case "false":
+		return false
+	case "0":
+		return false
+	case "False":
+		return false
+	default:
+		return true
+	}
 }
 
 func (s *TLSClient) LoadOption(option string) {
@@ -62,6 +77,8 @@ func (s *TLSClient) LoadOption(option string) {
 		switch key {
 		case "domain":
 			s.Domain = value
+		case "Mode":
+			s.VPN_Mode = String2Bool(value)
 		}
 	}
 }
