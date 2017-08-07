@@ -1,4 +1,4 @@
-package main
+package TLSClient
 
 import (
 	"github.com/op/go-logging"
@@ -12,6 +12,7 @@ import (
 )
 
 var log *logging.Logger
+var Log *logging.Logger
 
 func init() {
 	log = logging.MustGetLogger("example")
@@ -23,13 +24,13 @@ func init() {
 	backendLeveled := logging.AddModuleLevel(backendFormatter)
 	backendLeveled.SetLevel(logging.WARNING, "")
 	logging.SetBackend(backendLeveled)
-
+	Log = log
 }
 
 type TLSClient struct {
 	ListenAddress  string
 	BackendAddress string
-	domain         string
+	Domain         string
 }
 
 func (s *TLSClient) Init() *TLSClient {
@@ -42,7 +43,7 @@ func (s *TLSClient) Init() *TLSClient {
 	s.ListenAddress = SS_LOCAL_HOST + ":" + SS_LOCAL_PORT
 	ip_reg := `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
 	if ok, _ := regexp.MatchString(ip_reg, SS_REMOTE_PORT); !ok {
-		s.domain = SS_REMOTE_HOST
+		s.Domain = SS_REMOTE_HOST
 	}
 	s.LoadOption(SS_PLUGIN_OPTIONS)
 	//s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
@@ -60,7 +61,7 @@ func (s *TLSClient) LoadOption(option string) {
 		value := d[1]
 		switch key {
 		case "domain":
-			s.domain = value
+			s.Domain = value
 		}
 	}
 }
@@ -92,16 +93,15 @@ func (s *TLSClient) handleConn(conn net.Conn) {
 	defer conn.Close()
 	upConn := conn
 	log.Debugf("accepted: %s", conn.RemoteAddr())
-	tcpConn, err := net.Dial("tcp", s.BackendAddress)
+	downConn, err := tls.Dial("tcp", s.BackendAddress, nil)
 	if err != nil {
-		log.Warningf("TCP connect to %s failed: %s", s.BackendAddress, err)
+		log.Warningf("TLS connect to %s failed: %s", s.BackendAddress, err)
 		return
 	}
-	defer tcpConn.Close()
-	downConn := tls.Client(tcpConn, &tls.Config{ServerName: s.domain})
+	defer downConn.Close()
 	err = downConn.Handshake()
 	if err != nil {
-		log.Warningf("TLS handshake to %s(%s) failed: %s", s.BackendAddress, s.domain, err)
+		log.Warningf("TLS handshake to %s(%s) failed: %s", s.BackendAddress, s.Domain, err)
 		return
 	}
 	if err := s.Pipe(upConn, downConn); err != nil {
@@ -129,8 +129,4 @@ func (s *TLSClient) Pipe(a, b net.Conn) error {
 		return err2
 	}
 	return nil
-}
-
-func main() {
-	(&TLSClient{}).Init().Listen()
 }

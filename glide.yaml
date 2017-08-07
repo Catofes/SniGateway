@@ -2,3 +2,6 @@ package: github.com/Catofes/SniGateway
 import:
 - package: github.com/op/go-logging
   version: ^1.0.0
+- package: golang.org/x/mobile
+  subpackages:
+  - app
