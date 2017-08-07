@@ -8,6 +8,7 @@ import (
 	"io"
 	"crypto/tls"
 	"strings"
+	"regexp"
 )
 
 var log *logging.Logger
@@ -28,6 +29,7 @@ func init() {
 type TLSClient struct {
 	ListenAddress  string
 	BackendAddress string
+	domain         string
 }
 
 func (s *TLSClient) Init() *TLSClient {
@@ -38,6 +40,10 @@ func (s *TLSClient) Init() *TLSClient {
 	SS_PLUGIN_OPTIONS := os.Getenv("SS_PLUGIN_OPTIONS")
 	s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	s.ListenAddress = SS_LOCAL_HOST + ":" + SS_LOCAL_PORT
+	ip_reg := `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
+	if ok, _ := regexp.MatchString(ip_reg, SS_REMOTE_PORT); !ok {
+		s.domain=SS_REMOTE_HOST
+	}
 	s.LoadOption(SS_PLUGIN_OPTIONS)
 	//s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	return s
@@ -54,7 +60,7 @@ func (s *TLSClient) LoadOption(option string) {
 		value := d[1]
 		switch key {
 		case "domain":
-			s.BackendAddress = value
+			s.domain = value
 		}
 	}
 }
@@ -86,15 +92,16 @@ func (s *TLSClient) handleConn(conn net.Conn) {
 	defer conn.Close()
 	upConn := conn
 	log.Debugf("accepted: %s", conn.RemoteAddr())
-	downConn, err := tls.Dial("tcp", s.BackendAddress, nil)
+	tcpConn, err := net.Dial("tcp", s.BackendAddress)
 	if err != nil {
-		log.Warningf("unable to connect to %s: %s", s.BackendAddress, err)
+		log.Warningf("TCP connect to %s failed: %s", s.BackendAddress, err)
 		return
 	}
+	downConn := tls.Client(tcpConn, &tls.Config{ServerName: s.domain})
 	defer downConn.Close()
 	err = downConn.Handshake()
 	if err != nil {
-		log.Warningf("unable to connect to %s: %s", s.BackendAddress, err)
+		log.Warningf("Unable to connect to %s: %s", s.BackendAddress, err)
 		return
 	}
 	if err := s.Pipe(upConn, downConn); err != nil {
