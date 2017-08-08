@@ -57,7 +57,6 @@ import "C"
 import (
 	"flag"
 	"github.com/Catofes/SniGateway/client"
-	"crypto/tls"
 	"github.com/op/go-logging"
 	"net"
 	"syscall"
@@ -69,33 +68,6 @@ var log *logging.Logger
 func init() {
 	VPN_mode = *flag.Bool("V", false, "Set VPN mode.")
 	log = TLSClient.Log
-}
-
-type AndroidTLSClient struct {
-	TLSClient.TLSClient
-}
-
-func (s *AndroidTLSClient) handleConn(conn net.Conn) {
-	defer conn.Close()
-	upConn := conn
-	log.Debugf("accepted: %s", conn.RemoteAddr())
-	tcpConn, err := net.Dial("tcp", s.BackendAddress)
-	if err != nil {
-		log.Warningf("TCP connect to %s failed: %s", s.BackendAddress, err)
-		return
-	}
-	defer tcpConn.Close()
-	downConn := tls.Client(tcpConn, &tls.Config{ServerName: s.Domain})
-	err = downConn.Handshake()
-	if err != nil {
-		log.Warningf("TLS handshake to %s(%s) failed: %s", s.BackendAddress, s.Domain, err)
-		return
-	}
-	if err := s.Pipe(upConn, downConn); err != nil {
-		log.Warningf("pipe failed: %s", err)
-	} else {
-		log.Debugf("disconnected: %s", upConn.RemoteAddr())
-	}
 }
 
 func main() {
@@ -126,11 +98,11 @@ func main() {
 				return
 			}
 			if n != 1 {
-				log.Warningf("Failed to protect fd: %s", fd)
+				log.Warningf("Failed to protect fd: %d", fd)
 				return
 			}
 		}
 		net.Callback = callback
 	}
-	(&AndroidTLSClient{}).Init().Listen()
+	(&TLSClient.TLSClient{}).Init().Listen()
 }

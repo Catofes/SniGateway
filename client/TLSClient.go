@@ -93,12 +93,13 @@ func (s *TLSClient) handleConn(conn net.Conn) {
 	defer conn.Close()
 	upConn := conn
 	log.Debugf("accepted: %s", conn.RemoteAddr())
-	downConn, err := tls.Dial("tcp", s.BackendAddress, nil)
+	tcpConn, err := net.Dial("tcp", s.BackendAddress)
 	if err != nil {
-		log.Warningf("TLS connect to %s failed: %s", s.BackendAddress, err)
+		log.Warningf("TCP connect to %s failed: %s", s.BackendAddress, err)
 		return
 	}
-	defer downConn.Close()
+	defer tcpConn.Close()
+	downConn := tls.Client(tcpConn, &tls.Config{ServerName: s.Domain})
 	err = downConn.Handshake()
 	if err != nil {
 		log.Warningf("TLS handshake to %s(%s) failed: %s", s.BackendAddress, s.Domain, err)
