@@ -130,8 +130,10 @@ func (s *TLSServer) handleConn(conn net.Conn) {
 func (s *TLSServer) Pipe(a, b net.Conn) error {
 	done := make(chan error, 1)
 	cp := func(r, w net.Conn) {
-		n, err := io.Copy(r, w)
+		n, err := io.Copy(w, r)
 		log.Debugf("copied %d bytes from %s to %s", n, r.RemoteAddr(), w.RemoteAddr())
+		w.(net.TCPConn).CloseWrite()
+		r.(net.TCPConn).CloseRead()
 		done <- err
 	}
 	go cp(a, b)

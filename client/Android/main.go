@@ -104,7 +104,8 @@ func main() {
 			}
 		}
 		net.Callback = callback
+	} else {
+		log.Debugf("Net mode set.")
 	}
-	log.Debugf("Net mode set.")
 	client.Listen()
 }
