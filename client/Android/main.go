@@ -55,7 +55,6 @@ set_timeout(int sock)
 import "C"
 
 import (
-	"flag"
 	"github.com/Catofes/SniGateway/client"
 	"github.com/op/go-logging"
 	"net"
@@ -66,14 +65,16 @@ var VPN_mode bool = false
 var log *logging.Logger
 
 func init() {
-	VPN_mode = *flag.Bool("V", false, "Set VPN mode.")
 	log = TLSClient.Log
 }
 
 func main() {
-	if VPN_mode {
+	client := (&TLSClient.TLSClient{}).Init()
+	if client.VPN_Mode {
+		log.Debugf("VPN mode set.")
 		path := "protect_path"
 		callback := func(fd int) {
+			log.Debugf("Protect socket. %s", fd)
 			socket, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 			if err != nil {
 				log.Warning(err.Error())
@@ -104,5 +105,6 @@ func main() {
 		}
 		net.Callback = callback
 	}
-	(&TLSClient.TLSClient{}).Init().Listen()
+	log.Debugf("Net mode set.")
+	client.Listen()
 }
