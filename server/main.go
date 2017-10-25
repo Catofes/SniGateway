@@ -132,8 +132,17 @@ func (s *TLSServer) Pipe(a, b net.Conn) error {
 	cp := func(r, w net.Conn) {
 		n, err := io.Copy(w, r)
 		log.Debugf("copied %d bytes from %s to %s", n, r.RemoteAddr(), w.RemoteAddr())
-		w.(*net.TCPConn).CloseWrite()
-		r.(*net.TCPConn).CloseRead()
+		switch wc := w.(type){
+		case *tls.Conn:
+			wc.CloseWrite()
+		case *net.TCPConn:
+			wc.CloseWrite()
+		}
+		switch rc := r.(type){
+		case *tls.Conn:
+		case *net.TCPConn:
+			rc.CloseRead()
+		}
 		done <- err
 	}
 	go cp(a, b)
