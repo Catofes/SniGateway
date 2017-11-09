@@ -57,8 +57,8 @@ import "C"
 import (
 	"github.com/Catofes/SniGateway/client"
 	"github.com/op/go-logging"
-	"net"
 	"syscall"
+	"github.com/Catofes/SniGateway/go/src/net"
 )
 
 var VPN_mode bool = false
