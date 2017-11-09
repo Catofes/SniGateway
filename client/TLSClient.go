@@ -31,7 +31,7 @@ type TLSClient struct {
 	ListenAddress  string
 	BackendAddress string
 	Domain         string
-	VPN_Mode       bool
+	VPNMode        bool
 }
 
 func (s *TLSClient) Init() *TLSClient {
@@ -46,7 +46,7 @@ func (s *TLSClient) Init() *TLSClient {
 	if ok, _ := regexp.MatchString(ip_reg, SS_REMOTE_PORT); !ok {
 		s.Domain = SS_REMOTE_HOST
 	}
-	s.VPN_Mode = true
+	s.VPNMode = true
 	s.LoadOption(SS_PLUGIN_OPTIONS)
 	//s.BackendAddress = SS_REMOTE_HOST + ":" + SS_REMOTE_PORT
 	return s
@@ -78,13 +78,13 @@ func (s *TLSClient) LoadOption(option string) {
 		case "domain":
 			s.Domain = value
 		case "Mode":
-			s.VPN_Mode = String2Bool(value)
+			s.VPNMode = String2Bool(value)
 		}
 	}
 }
 
 func (s *TLSClient) Listen() {
-	ln, err := net.Listen("tcp4", s.ListenAddress)
+	ln, err := net.Listen("tcp", s.ListenAddress)
 	if err != nil {
 		log.Fatalf("Error Listen Port. %s", err.Error())
 	}

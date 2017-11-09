@@ -70,7 +70,7 @@ func init() {
 
 func main() {
 	client := (&TLSClient.TLSClient{}).Init()
-	if client.VPN_Mode {
+	if client.VPNMode {
 		log.Debugf("VPN mode set.")
 		path := "protect_path"
 		callback := func(fd int) {

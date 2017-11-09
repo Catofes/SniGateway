@@ -84,7 +84,7 @@ func (s *TLSServer) Listen() {
 		config = &tls.Config{}
 		config.Certificates = append(config.Certificates, cert)
 	}
-	ln, err := tls.Listen("tcp4", s.ListenAddress, config)
+	ln, err := tls.Listen("tcp", s.ListenAddress, config)
 	if err != nil {
 		log.Fatalf("Error Listen Port. %s", err.Error())
 	}
