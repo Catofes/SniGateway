@@ -9,11 +9,13 @@ import (
 	"os"
 	"io"
 	"strings"
+	"flag"
 )
 
 var log *logging.Logger
 
 func init() {
+	debug := flag.Bool("-d", false, "Debug Mode.")
 	log = logging.MustGetLogger("example")
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	format := logging.MustStringFormatter(
@@ -21,9 +23,12 @@ func init() {
 	)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 	backendLeveled := logging.AddModuleLevel(backendFormatter)
-	backendLeveled.SetLevel(logging.WARNING, "")
+	if *debug {
+		backendLeveled.SetLevel(logging.DEBUG, "")
+	} else {
+		backendLeveled.SetLevel(logging.WARNING, "")
+	}
 	logging.SetBackend(backendLeveled)
-
 }
 
 type TLSServer struct {
@@ -132,13 +137,13 @@ func (s *TLSServer) Pipe(a, b net.Conn) error {
 	cp := func(r, w net.Conn) {
 		n, err := io.Copy(w, r)
 		log.Debugf("copied %d bytes from %s to %s", n, r.RemoteAddr(), w.RemoteAddr())
-		switch wc := w.(type){
+		switch wc := w.(type) {
 		case *tls.Conn:
 			wc.CloseWrite()
 		case *net.TCPConn:
 			wc.CloseWrite()
 		}
-		switch rc := r.(type){
+		switch rc := r.(type) {
 		case *tls.Conn:
 		case *net.TCPConn:
 			rc.CloseRead()

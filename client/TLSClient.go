@@ -122,33 +122,31 @@ func (s *TLSClient) handleConn(conn net.Conn) {
 		log.Warningf("TLS handshake to %s(%s) failed: %s", s.BackendAddress, s.Domain, err)
 		return
 	}
-	if err := s.Pipe(upConn, downConn); err != nil {
+	if err := s.Pipe(upConn, downConn, tcpConn); err != nil {
 		log.Warningf("pipe failed: %s", err)
 	} else {
 		log.Debugf("disconnected: %s", upConn.RemoteAddr())
 	}
 }
 
-func (s *TLSClient) Pipe(a, b net.Conn) error {
+func (s *TLSClient) Pipe(a, b, c net.Conn) error {
 	done := make(chan error, 1)
-	cp := func(r, w net.Conn) {
-		n, err := io.Copy(w, r)
-		log.Debugf("copied %d bytes from %s to %s", n, r.RemoteAddr(), w.RemoteAddr())
-		switch wc := w.(type){
-		case *tls.Conn:
-			wc.CloseWrite()
-		case *net.TCPConn:
-			wc.CloseWrite()
-		}
-		switch rc := r.(type){
-		case *tls.Conn:
-		case *net.TCPConn:
-			rc.CloseRead()
-		}
+	download := func(a, b, c net.Conn) {
+		n, err := io.Copy(a, b)
+		log.Debugf("copied %d bytes from %s to %s", n, b.RemoteAddr(), a.RemoteAddr())
+		c.(*net.TCPConn).CloseRead()
+		a.(*net.TCPConn).CloseWrite()
 		done <- err
 	}
-	go cp(a, b)
-	go cp(b, a)
+	upload := func(a, b, c net.Conn) {
+		n, err := io.Copy(b, a)
+		log.Debugf("copied %d bytes from %s to %s", n, a.RemoteAddr(), b.RemoteAddr())
+		a.(*net.TCPConn).CloseRead()
+		c.(*net.TCPConn).CloseWrite()
+		done <- err
+	}
+	go download(a, b, c)
+	go upload(a, b, c)
 	err1 := <-done
 	err2 := <-done
 	if err1 != nil {

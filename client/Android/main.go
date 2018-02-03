@@ -58,7 +58,7 @@ import (
 	"github.com/Catofes/SniGateway/client"
 	"github.com/op/go-logging"
 	"syscall"
-	"github.com/Catofes/SniGateway/go/src/net"
+	"net"
 )
 
 var VPN_mode bool = false
@@ -89,7 +89,6 @@ func main() {
 				log.Warning(err.Error())
 				return
 			}
-
 			C.ancil_send_fd(C.int(socket), C.int(fd))
 
 			dummy := []byte{1}
