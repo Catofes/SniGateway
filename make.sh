@@ -46,15 +46,15 @@ export PATH=$GOROOT/bin:$PATH
 #mkdir -p build/arm
 #mkdir -p build/x86
 
-cd $DIR/client/Android
+cd $DIR/$2/Android
 echo "Cross compile kcptun for arm"
 try env CGO_ENABLED=1 CC=$ANDROID_ARM_CC GOOS=android GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o client
 try $ANDROID_ARM_STRIP client
-try mv client $DIR/build/arm/libkcptun.so
+try mv client $DIR/build/arm/lib$2.so
 
 echo "Cross compile kcptun for x86"
 try env CGO_ENABLED=1 CC=$ANDROID_X86_CC GOOS=android GOARCH=386 go build -ldflags="-s -w" -o client
 try $ANDROID_X86_STRIP client
-try mv client $DIR/build/x86/libkcptun.so
+try mv client $DIR/build/x86/lib$2.so
 
 echo "Successfully build kcptun"
