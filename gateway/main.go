@@ -189,7 +189,7 @@ func (s *SNIHandler) Handle(lc net.Conn) {
 	log.Debugf("Handle connection %v\n", lc.RemoteAddr())
 	defer lc.Close()
 	var err error
-	b := make([]byte, 1024)
+	b := make([]byte, 4096)
 	n, err := lc.Read(b)
 	if err != nil {
 		log.Debugf("Read error: %v\n", err)
@@ -197,7 +197,7 @@ func (s *SNIHandler) Handle(lc net.Conn) {
 	}
 	b = b[:n]
 
-	host, err := s.ParseSNI(b)
+	host, err := GetHostname(b[:])
 	if err != nil {
 		log.Warningf("ParseSNI error: %v\n", err)
 		return
